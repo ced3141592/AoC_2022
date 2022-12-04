@@ -15,9 +15,6 @@ def fully_contains(r1, r2):
 
     # return r1.issubset(r2) or r2.issubset(r1)   # Task 1
     return len(r1.intersection(r2)) > 0           # Task 2
-    
-
-
 
 with open('input.txt') as cleaning_list:
 
