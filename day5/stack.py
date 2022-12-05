@@ -38,7 +38,15 @@ def do_instruction(intr :list, stacks: dict):
 
     for i in range(num_crates):
         stacks[to_stack].append(stacks[from_stack].pop())
-    
+
+def do_instructions_CrateMover9001(intr :list, stacks: dict):
+    num_crates = int(intr[0])
+    from_stack = int(intr[1])
+    to_stack = int(intr[2])
+
+    chunk = [stacks[from_stack].pop() for _ in range(num_crates)][::-1]
+    for c in chunk:
+        stacks[to_stack].append(c)
 
 
 def main():
@@ -46,7 +54,8 @@ def main():
     stacks = get_stack_input()
 
     for i in get_instructions_input():
-        do_instruction(i, stacks)
+        # do_instruction(i, stacks)
+        do_instructions_CrateMover9001(i, stacks)
     
     for i in range(len(stacks)):
         print(stacks[i+1].pop(), end='')
