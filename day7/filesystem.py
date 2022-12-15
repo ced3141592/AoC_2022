@@ -1,4 +1,3 @@
-
 class Tree():
 
     def __init__(self, dir=None, name=None, value=None, children=None, parent=None):
@@ -91,27 +90,27 @@ class Tree():
                 child.printTree(depth+1)
 
     def getallDirSizeWithSubdirsLimit(self, limit, allDirsValue):
-        if Tree.isNode(self):    
+        if Tree.isNode(self):
+            if self.valueWithSubdirs <= limit:
+                        allDirsValue.append(self.valueWithSubdirs)    
             for child in self.children:
                 if Tree.isNode(child):
-                    if child.valueWithSubdirs <= limit:
-                        allDirsValue.append(child.valueWithSubdirs)
                     child.getallDirSizeWithSubdirsLimit(limit, allDirsValue)
         return allDirsValue
 
-    def toJson(self, dict):
-
-        dict[self.dir] = []
-        if Tree.isLeaf(self):
-            dict[self.dir].append(f"{self.name} {self.value}")
-        else:
-            dict[self.dir].append({})
+    def getallDirSizeWithSubdirsMin(self, limit, allDirsValue):
+        if Tree.isNode(self):    
+            if self.valueWithSubdirs >= limit:
+                allDirsValue.append({self.dir: self.valueWithSubdirs})
             for child in self.children:
-                child.toJson(dict[self.dir][-1])
+                if Tree.isNode(child):
+                    if child.valueWithSubdirs >= limit:
+                        child.getallDirSizeWithSubdirsMin(limit, allDirsValue)
+        return allDirsValue
 
-        return dict
 
-            
+TOTAL_DISK_SPACE = 70000000
+SPACE_REQUIRED = 30000000            
 
 def isCmd(line):
     return '$' in line and ' ' in line
@@ -142,7 +141,7 @@ def parse_browse_to_tree(input):
                             dir = cd.mkdir(cmd[2])
                             cd = cd.cd(dir)
 
-                elif cmd[1] == 'ls': # next output will be content of cwd. Create container for this
+                elif cmd[1] == 'ls': 
                     lsFlag = True
             else:
                 if ' ' in line:
@@ -151,26 +150,49 @@ def parse_browse_to_tree(input):
                         if lsFlag:
                             cd.mkdir(line[1])
 
-                    elif line[0].isnumeric(): # output line is a file (or Leaf). Format '<size> <name>'
+                    elif line[0].isnumeric(): 
                         cd.addLeaf(line[1], line[0])
 
     return tree
 
+def spaceNeeded(TotalDiskSpace :int, SpaceRequired :int, filesystem: Tree):
+    excessSpace = TotalDiskSpace - filesystem.valueWithSubdirs - SpaceRequired
+    if excessSpace < 0:
+        return excessSpace * -1
+    else:
+        return False
 
 def main():
+
     with open("input.txt") as input:
         browse = [line.rstrip() for line in input]
 
         filesystem = parse_browse_to_tree(browse)
+    input.close()
+    
+    
+    filesystem.printTree(0)
+    print("\n")
 
-        filesystem.printTree(0)
+    # Task 1
+    allDirsValue100000 = filesystem.getallDirSizeWithSubdirsLimit(100000, [])
+    print("All directories summed up with a max of 100000: ", end='')
+    print(sum(allDirsValue100000))
+    print()
 
-        print("\n")
 
-        allDirsValue100000 = filesystem.getallDirSizeWithSubdirsLimit(100000, [])
+    # Task 2 
+    space = spaceNeeded(TOTAL_DISK_SPACE, SPACE_REQUIRED, filesystem)
 
-        # print(allDirsValue100000)
-        print(sum(allDirsValue100000))
+    if space:
+        availableForDelete = filesystem.getallDirSizeWithSubdirsMin(space, [])
+        
+        smallest = availableForDelete[0]
+        for dir in availableForDelete:
+            if list(smallest.values())[0] > list(dir.values())[0]:
+                smallest = dir
+        
+        print(f"Required Space for update: {space}\nSmallest directory available for deletion: {smallest}")
 
 if __name__ == '__main__':
     main()
